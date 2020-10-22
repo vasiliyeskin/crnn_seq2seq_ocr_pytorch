@@ -82,10 +82,14 @@ def train(image, text, encoder, decoder, criterion, train_loader, teach_forcing_
 
             # CNN + BiLSTM
             encoder_outputs = encoder(image)
-            target_variable = target_variable.cuda()
-            # start decoder for SOS_TOKEN
-            decoder_input = target_variable[utils.SOS_TOKEN].cuda()
-            decoder_hidden = decoder.initHidden(batch_size).cuda()
+            if torch.cuda.is_available():
+                target_variable = target_variable.cuda()
+                # start decoder for SOS_TOKEN
+                decoder_input = target_variable[utils.SOS_TOKEN].cuda()
+                decoder_hidden = decoder.initHidden(batch_size).cuda()
+            else:
+                decoder_input = target_variable[utils.SOS_TOKEN]
+                decoder_hidden = decoder.initHidden(batch_size)
 
             if i == 28:
                 print(encoder_outputs)
@@ -146,9 +150,13 @@ def evaluate(image, text, encoder, decoder, data_loader, max_eval_iter=100):
         decoded_words = []
         decoded_label = []
         encoder_outputs = encoder(image)
-        target_variable = target_variable.cuda()
-        decoder_input = target_variable[0].cuda()
-        decoder_hidden = decoder.initHidden(batch_size).cuda()
+        if torch.cuda.is_available():
+            target_variable = target_variable.cuda()
+            decoder_input = target_variable[0].cuda()
+            decoder_hidden = decoder.initHidden(batch_size).cuda()
+        else:
+            decoder_input = target_variable[0]
+            decoder_hidden = decoder.initHidden(batch_size)
 
         for di in range(1, target_variable.shape[0]):
             decoder_output, decoder_hidden, decoder_attention = decoder(decoder_input, decoder_hidden, encoder_outputs)
@@ -224,12 +232,13 @@ def main():
 
     criterion = torch.nn.NLLLoss()
 
-    assert torch.cuda.is_available(), "Please run \'train.py\' script on nvidia cuda devices."
-    encoder.cuda()
-    decoder.cuda()
-    image = image.cuda()
-    text = text.cuda()
-    criterion = criterion.cuda()
+    # assert torch.cuda.is_available(), "Please run \'train.py\' script on nvidia cuda devices."
+    if torch.cuda.is_available():
+        encoder.cuda()
+        decoder.cuda()
+        image = image.cuda()
+        text = text.cuda()
+        criterion = criterion.cuda()
 
     # train crnn
     train(image, text, encoder, decoder, criterion, train_loader, teach_forcing_prob=cfg.teaching_forcing_prob)
