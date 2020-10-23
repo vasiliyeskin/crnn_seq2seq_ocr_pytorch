@@ -41,7 +41,7 @@ print(cfg)
 with open('./data/sample/latex_vocab.txt') as f:
     data = f.readlines()
     alphabet = [x.rstrip() for x in data]
-    # alphabet = ''.join(alphabet)
+    alphabet = ''.join(alphabet)
 
 # define convert bwteen string and label index
 converter = utils.ConvertBetweenStringAndLabel(alphabet)
