@@ -93,15 +93,15 @@ def train(image, text, encoder, decoder, criterion, train_loader, teach_forcing_
 
             # # if i == 28:
             # # outputs for the test
-            print(f'    decoder_input {0}', decoder_input.shape)
+            # print(f'    decoder_input {0}', decoder_input.shape)
             # print(f'    decoder_hidden{0}', decoder_hidden.shape)
             # print(f'    encoder_outputs{0}', encoder_outputs.shape)
 
             loss = 0.0
             teach_forcing = True if random.random() > teach_forcing_prob else False
-            print('    teach_forcing: {}'.format(teach_forcing))
-            print('    decoder_input.shape[0] {}, batch_size {}, batch_size condition: {}'.format(decoder_input.shape[0], batch_size, decoder_input.shape[0] < batch_size))
-            if teach_forcing or decoder_input.shape[0] < batch_size:
+            # print('    teach_forcing: {}'.format(teach_forcing))
+            # print('    decoder_input.shape[0] {}, batch_size {}, batch_size condition: {}'.format(decoder_input.shape[0], batch_size, decoder_input.shape[0] < batch_size))
+            if teach_forcing or decoder_input.shape[0] < cfg.batch_size:
                 for di in range(1, target_variable.shape[0]):
                     decoder_output, decoder_hidden, decoder_attention = decoder(decoder_input, decoder_hidden, encoder_outputs)
                     loss += criterion(decoder_output, target_variable[di])
