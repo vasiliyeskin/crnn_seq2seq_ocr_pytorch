@@ -99,8 +99,8 @@ def train(image, text, encoder, decoder, criterion, train_loader, teach_forcing_
 
             loss = 0.0
             teach_forcing = True if random.random() > teach_forcing_prob else False
-            print(f'    teach_forcing: {0}', teach_forcing)
-            print(f'    decoder_input.shape[0] {0}, batch_size {1}, batch_size condition: {2}', decoder_input.shape[0], batch_size, decoder_input.shape[0] < batch_size)
+            print('    teach_forcing: {}'.format(teach_forcing))
+            print('    decoder_input.shape[0] {}, batch_size {}, batch_size condition: {}'.format(decoder_input.shape[0], batch_size, decoder_input.shape[0] < batch_size))
             if teach_forcing or decoder_input.shape[0] < batch_size:
                 for di in range(1, target_variable.shape[0]):
                     decoder_output, decoder_hidden, decoder_attention = decoder(decoder_input, decoder_hidden, encoder_outputs)
