@@ -10,6 +10,13 @@ import torchvision
 import torch.backends.cudnn as cudnn
 import torch.utils.data
 
+import matplotlib.pyplot as plt
+
+import tensorboardX.utils as xutils
+import tensorboardX.x2num as x2num
+import torchvision.utils as vutils
+
+
 import src.utils as utils
 import src.dataset as dataset
 
@@ -25,7 +32,7 @@ parser.add_argument('--batch_size', type=int, default=32, help='input batch size
 parser.add_argument('--img_height', type=int, default=32, help='the height of the input image to network')
 parser.add_argument('--img_width', type=int, default=280, help='the width of the input image to network')
 parser.add_argument('--hidden_size', type=int, default=256, help='size of the lstm hidden state')
-parser.add_argument('--num_epochs', type=int, default=20, help='number of epochs to train for')
+parser.add_argument('--num_epochs', type=int, default=2, help='number of epochs to train for')
 parser.add_argument('--learning_rate', type=float, default=0.0001, help='learning rate for Critic, default=0.00005')
 parser.add_argument('--encoder', type=str, default='', help="path to encoder (to continue training)")
 parser.add_argument('--decoder', type=str, default='', help='path to decoder (to continue training)')
@@ -53,6 +60,11 @@ num_classes = len(alphabet) + 2
 with open('data/sample/formulas.norm.lst') as file:
     formulas = file.read().splitlines()
 
+def tensor2image(x):
+    tensor = x2num.make_np(vutils.make_grid(x.data[:64], normalize=True))
+    xtensors = xutils.convert_to_HWC(tensor, 'CHW')
+    plt.imshow(xtensors)
+    plt.show()
 
 def train(image, text, encoder, decoder, criterion, train_loader, teach_forcing_prob=1):
     # optimizer
@@ -97,12 +109,22 @@ def train(image, text, encoder, decoder, criterion, train_loader, teach_forcing_
             # print(f'    decoder_hidden{0}', decoder_hidden.shape)
             # print(f'    encoder_outputs{0}', encoder_outputs.shape)
 
+            # tensor2image(cpu_images[0])
+            # print(cpu_texts[0])
+            # print(target_variable[0])
+
             loss = 0.0
             teach_forcing = True if random.random() > teach_forcing_prob else False
             # print('    teach_forcing: {}'.format(teach_forcing))
             # print('    decoder_input.shape[0] {}, batch_size {}, batch_size condition: {}'.format(decoder_input.shape[0], batch_size, decoder_input.shape[0] < batch_size))
             if teach_forcing or decoder_input.shape[0] < cfg.batch_size:
                 for di in range(1, target_variable.shape[0]):
+
+                    # tensor2image(cpu_images[di])
+                    # print(cpu_texts[di])
+                    # print(target_variable[di])
+                    # print([converter.decode(item) for item in target_variable[di]])
+
                     decoder_output, decoder_hidden, decoder_attention = decoder(decoder_input, decoder_hidden, encoder_outputs)
                     loss += criterion(decoder_output, target_variable[di])
                     decoder_input = target_variable[di]

@@ -40,7 +40,7 @@ class ConvertBetweenStringAndLabel(object):
             torch.IntTensor targets:max_length × batch_size
         """
         if isinstance(text, str):
-            text = [self.dict[item] if item in self.dict else 2 for item in text]
+            text = [self.dict[item] if item in self.dict else 2 for item in text.split(' ')]
         elif isinstance(text, collections.Iterable):
             text = [self.encode(s) for s in text]
             max_length = max([len(x) for x in text])
