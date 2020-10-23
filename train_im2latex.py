@@ -121,7 +121,7 @@ def train(image, text, encoder, decoder, criterion, train_loader, teach_forcing_
             loss_avg.add(loss)
 
             if i % 1 == 0:
-                print('[Epoch {0}/{1}] [Batch {2}/{3}] Loss: {4}'.format(epoch, cfg.num_epochs, i, len(train_loader), loss_avg.val()))
+                print('[Epoch {0}/{1}] [Batch {2}/{3}] Loss: {4}'.format(epoch + 1, cfg.num_epochs, i + 1, len(train_loader), loss_avg.val()))
                 loss_avg.reset()
 
         # save checkpoint
@@ -180,7 +180,8 @@ def evaluate(image, text, encoder, decoder, data_loader, max_eval_iter=100):
 
         if i % 10 == 0:
             texts = cpu_texts[0]
-            print('pred: {}, gt: {}'.format(''.join(decoded_words), texts))
+            print('pred {}: {}'.format(i, ''.join(decoded_words)))
+            print('gt {}: {}'.format(i, texts))
 
     accuracy = n_correct / float(n_total)
     print('Test loss: {}, accuray: {}'.format(loss_avg.val(), accuracy))
