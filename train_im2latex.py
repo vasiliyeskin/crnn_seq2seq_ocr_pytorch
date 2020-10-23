@@ -93,9 +93,9 @@ def train(image, text, encoder, decoder, criterion, train_loader, teach_forcing_
 
             # if i == 28:
             # outputs for the test
-            print(f'decoder_input{0}', decoder_input.shape)
-            print(f'decoder_hidden{0}', decoder_hidden.shape)
-            print(f'encoder_outputs{0}', encoder_outputs.shape)
+            print(f'    decoder_input{0}', decoder_input.shape)
+            print(f'    decoder_hidden{0}', decoder_hidden.shape)
+            print(f'    encoder_outputs{0}', encoder_outputs.shape)
 
             loss = 0.0
             teach_forcing = True if random.random() > teach_forcing_prob else False
