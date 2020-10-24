@@ -29,9 +29,9 @@ parser.add_argument('--train_list', type=str, default='data/sample/train_filter.
 parser.add_argument('--eval_list', type=str, default='data/sample/validate_filter.lst', help='path to evalation dataset list file')
 parser.add_argument('--num_workers', type=int, default=4, help='number of data loading num_workers')
 parser.add_argument('--batch_size', type=int, default=32, help='input batch size')
-parser.add_argument('--img_height', type=int, default=32, help='the height of the input image to network')
+# parser.add_argument('--img_height', type=int, default=32, help='the height of the input image to network')
 parser.add_argument('--img_width', type=int, default=280, help='the width of the input image to network')
-# parser.add_argument('--img_height', type=int, default=160, help='the height of the input image to network')
+parser.add_argument('--img_height', type=int, default=160, help='the height of the input image to network')
 # parser.add_argument('--img_width', type=int, default=500, help='the width of the input image to network')
 parser.add_argument('--hidden_size', type=int, default=256, help='size of the lstm hidden state')
 parser.add_argument('--num_epochs', type=int, default=10, help='number of epochs to train for')
@@ -241,10 +241,19 @@ def main():
                                            )
     test_loader = torch.utils.data.DataLoader(test_dataset, shuffle=False, batch_size=1, num_workers=int(cfg.num_workers))
 
+    # create input tensor
+    image = torch.FloatTensor(cfg.batch_size, 3, cfg.img_height, cfg.img_width)
+    text = torch.LongTensor(cfg.batch_size)
+
     # create crnn/seq2seq/attention network
     encoder = crnn.Encoder(channel_size=3, hidden_size=cfg.hidden_size)
+
+    # max length for the decoder
+    max_width = cfg.max_width
+    max_width = encoder.get_max_lenght_for_Decoder(image)
+
     # for prediction of an indefinite long sequence
-    decoder = crnn.Decoder(hidden_size=cfg.hidden_size, output_size=num_classes, dropout_p=0.1, max_length=cfg.max_width)
+    decoder = crnn.Decoder(hidden_size=cfg.hidden_size, output_size=num_classes, dropout_p=0.1, max_length=max_width)
     print(encoder)
     print(decoder)
     encoder.apply(utils.weights_init)
@@ -256,9 +265,6 @@ def main():
         print('loading pretrained encoder model from %s' % cfg.decoder)
         decoder.load_state_dict(torch.load(cfg.decoder))
 
-    # create input tensor
-    image = torch.FloatTensor(cfg.batch_size, 3, cfg.img_height, cfg.img_width)
-    text = torch.LongTensor(cfg.batch_size)
 
     criterion = torch.nn.NLLLoss()
 

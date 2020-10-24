@@ -93,13 +93,19 @@ class Encoder(nn.Module):
         # conv features
         conv = self.cnn(input)
         b, c, h, w = conv.size()
-        assert h == 1, "the height of conv must be 1"
+        # assert h == 1, "the height of conv must be 1"
 
         # rnn feature
-        conv = conv.squeeze(2)        # [b, c, 1, w] -> [b, c, w]
+        # conv = conv.squeeze(2)        # [b, c, 1, w] -> [b, c, w]
+        conv = conv.view(b, c, h * w)   # [b, c, h, w] -> [b, c, h*w]
         conv = conv.permute(2, 0, 1)  # [b, c, w] -> [w, b, c]
         output = self.rnn(conv)
         return output
+
+    def get_max_lenght_for_Decoder(self, input):
+        conv = self.cnn(input)
+        b, c, h, w = conv.size()
+        return h * w
 
 
 class Decoder(nn.Module):
