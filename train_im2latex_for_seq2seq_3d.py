@@ -207,11 +207,11 @@ def evaluate(image, text, model, criterion, data_loader, max_eval_iter=100):
             target_variable = converter.encode(cpu_texts)
             n_total += len(cpu_texts[0]) + 1
 
-        decoded_words = []
-        decoded_label = []
+            decoded_words = []
+            decoded_label = []
         # encoder_outputs = encoder(image)
-        if torch.cuda.is_available():
-            target_variable = target_variable.cuda()
+            if torch.cuda.is_available():
+                target_variable = target_variable.cuda()
         #     decoder_input = target_variable[0].cuda()
         #     decoder_hidden = decoder.initHidden(batch_size).cuda()
         # else:
@@ -246,11 +246,6 @@ def evaluate(image, text, model, criterion, data_loader, max_eval_iter=100):
             print('pred {}: {}'.format(i, ''.join(decoded_words)))
             print('gt {}: {}'.format(i, texts))
 
-            texts = cpu_texts[1]
-            print(decoded_label.shape)
-            decoded_words = [converter.decode(item) for item in decoded_label[1]]
-            print('pred {}: {}'.format(i, ''.join(decoded_words)))
-            print('gt {}: {}'.format(i, texts))
 
     accuracy = epoch_loss / max_eval_iter
     print('Test epoch loss: {}, accuray: {}'.format(epoch_loss, accuracy))
