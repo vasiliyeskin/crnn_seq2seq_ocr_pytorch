@@ -7,7 +7,7 @@ import torch.nn.functional as F
 
 from torchtext.datasets import Multi30k
 from torchtext.data import Field, BucketIterator, TabularDataset
-from torchtext.data.metrics import bleu_score
+# from torchtext.data.metrics import bleu_score
 
 import spacy
 import numpy as np
@@ -391,23 +391,23 @@ def translate_sentence(sentence, src_field, trg_field, model, device, max_len=50
 
     return trg_tokens[1:]
 
-def calculate_bleu(data, src_field, trg_field, model, device, max_len=50):
-    trgs = []
-    pred_trgs = []
-
-    for datum in data:
-        src = vars(datum)['src']
-        trg = vars(datum)['trg']
-
-        pred_trg = translate_sentence(src, src_field, trg_field, model, device, max_len)
-
-        # cut off <eos> token
-        pred_trg = pred_trg[:-1]
-
-        pred_trgs.append(pred_trg)
-        trgs.append([trg])
-
-    return bleu_score(pred_trgs, trgs)
+# def calculate_bleu(data, src_field, trg_field, model, device, max_len=50):
+#     trgs = []
+#     pred_trgs = []
+#
+#     for datum in data:
+#         src = vars(datum)['src']
+#         trg = vars(datum)['trg']
+#
+#         pred_trg = translate_sentence(src, src_field, trg_field, model, device, max_len)
+#
+#         # cut off <eos> token
+#         pred_trg = pred_trg[:-1]
+#
+#         pred_trgs.append(pred_trg)
+#         trgs.append([trg])
+#
+#     return bleu_score(pred_trgs, trgs)
 
 def from_txt_to_dataframe_and_csv(dir, src_file, tgt_file, file_csv):
     src_text = open(f'{dir}/{src_file}').read().split('\n')
