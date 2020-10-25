@@ -181,7 +181,7 @@ def train(image, text, model, criterion, train_loader, teach_forcing_prob=1):
         # torch.save(decoder.state_dict(), '{0}/decoder_{1}.pth'.format(cfg.model, epoch))
 
 
-def evaluate(image, text, model, data_loader, max_eval_iter=100):
+def evaluate(image, text, model, criterion, data_loader, max_eval_iter=100):
 
     # for e, d in zip(encoder.parameters(), decoder.parameters()):
     #     e.requires_grad = False
@@ -196,6 +196,8 @@ def evaluate(image, text, model, data_loader, max_eval_iter=100):
     n_total = 0
     loss_avg = utils.Averager()
 
+    epoch_loss = 0
+
     with torch.no_grad():
         for i in range(min(len(data_loader), max_eval_iter)):
             cpu_images, cpu_texts = val_iter.next()
@@ -205,54 +207,46 @@ def evaluate(image, text, model, data_loader, max_eval_iter=100):
             target_variable = converter.encode(cpu_texts)
             n_total += len(cpu_texts[0]) + 1
 
-            decoded_words = []
-            decoded_label = []
-            trg_len = target_variable.shape[0]
-            trg_vocab_size = model.decoder.output_dim
+        decoded_words = []
+        decoded_label = []
+        # encoder_outputs = encoder(image)
+        if torch.cuda.is_available():
+            target_variable = target_variable.cuda()
+        #     decoder_input = target_variable[0].cuda()
+        #     decoder_hidden = decoder.initHidden(batch_size).cuda()
+        # else:
+        #     decoder_input = target_variable[0]
+        #     decoder_hidden = decoder.initHidden(batch_size)
+        #
+        # for di in range(1, target_variable.shape[0]):
+        #     decoder_output, decoder_hidden, decoder_attention = decoder(decoder_input, decoder_hidden, encoder_outputs)
+        #     topv, topi = decoder_output.data.topk(1)
+        #     ni = topi.squeeze(1)
+        #     decoder_input = ni
+        #     if ni == utils.EOS_TOKEN:
+        #         decoded_label.append(utils.EOS_TOKEN)
+        #         break
+        #     else:
+        #         decoded_words.append(converter.decode(ni))
+        #         decoded_label.append(ni)
+            decoded_label = model(image, target_variable, 0)
+            output_dim = decoded_label.shape[-1]
+            decoded_label = decoded_label[1:].view(-1, output_dim)
+            target_variable = target_variable[1:].view(-1)
+            print(decoded_label)
+            decoded_words = [converter.decode(item) for item in decoded_label]
 
-            outputs = torch.zeros(trg_len, batch_size, trg_vocab_size).to(model.device)
-
-            # image to the convolution neural network
-            cnn_outputs = model.cnn(image)
-            b, c, h, w = cnn_outputs.size()
-            cnn_outputs = cnn_outputs.view(b, c, h * w)  # [b, c, h, w] -> [b, c, h*w]
-            cnn_outputs = cnn_outputs.permute(2, 0, 1)  # [b, c, w] -> [w, b, c]
-
-            encoder_outputs, hidden = model.encoder(cnn_outputs)
-            # first input to the decoder is the <sos> tokens
-            input = target_variable[0, :]
-
-            if torch.cuda.is_available():
-                target_variable = target_variable.cuda()
-                decoder_input = target_variable[0].cuda()
-                decoder_hidden = model.decoder.initHidden(batch_size).cuda()
-            else:
-                decoder_input = target_variable[0]
-                decoder_hidden = model.decoder.initHidden(batch_size)
-
-            for di in range(1, target_variable.shape[0]):
-                decoder_output, decoder_hidden, decoder_attention = model.decoder(decoder_input, decoder_hidden, encoder_outputs)
-                topv, topi = decoder_output.data.topk(1)
-                ni = topi.squeeze(1)
-                decoder_input = ni
-                if ni == utils.EOS_TOKEN:
-                    decoded_label.append(utils.EOS_TOKEN)
-                    break
-                else:
-                    decoded_words.append(converter.decode(ni))
-                    decoded_label.append(ni)
-
-            for pred, target in zip(decoded_label, target_variable[1:,:]):
-                if pred == target:
-                    n_correct += 1
+            loss = criterion(decoded_label, target_variable)
+            epoch_loss += loss.item()
 
             if i % 10 == 0:
                 texts = cpu_texts[0]
                 print('pred {}: {}'.format(i, ''.join(decoded_words)))
                 print('gt {}: {}'.format(i, texts))
 
-        accuracy = n_correct / float(n_total)
-        print('Test loss: {}, accuray: {}'.format(loss_avg.val(), accuracy))
+    accuracy = epoch_loss / max_eval_iter
+    print('Test epoch loss: {}, accuray: {}'.format(epoch_loss, accuracy))
+
 
 def get_formula(label):
     # function returnes the formula
@@ -349,7 +343,7 @@ def main():
     train(image, text, model, criterion, train_loader, teach_forcing_prob=cfg.teaching_forcing_prob)
 
     # do evaluation after training
-    evaluate(image, text, model, test_loader, max_eval_iter=100)
+    evaluate(image, text, model, criterion, test_loader, max_eval_iter=100)
 
 
 if __name__ == "__main__":
