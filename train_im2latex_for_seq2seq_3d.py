@@ -212,23 +212,7 @@ def evaluate(image, text, model, criterion, data_loader, max_eval_iter=100):
         # encoder_outputs = encoder(image)
             if torch.cuda.is_available():
                 target_variable = target_variable.cuda()
-        #     decoder_input = target_variable[0].cuda()
-        #     decoder_hidden = decoder.initHidden(batch_size).cuda()
-        # else:
-        #     decoder_input = target_variable[0]
-        #     decoder_hidden = decoder.initHidden(batch_size)
-        #
-        # for di in range(1, target_variable.shape[0]):
-        #     decoder_output, decoder_hidden, decoder_attention = decoder(decoder_input, decoder_hidden, encoder_outputs)
-        #     topv, topi = decoder_output.data.topk(1)
-        #     ni = topi.squeeze(1)
-        #     decoder_input = ni
-        #     if ni == utils.EOS_TOKEN:
-        #         decoded_label.append(utils.EOS_TOKEN)
-        #         break
-        #     else:
-        #         decoded_words.append(converter.decode(ni))
-        #         decoded_label.append(ni)
+
             decoded_label = model(image, target_variable, 0)
             label_number, batch, output_dim = decoded_label.size()
             decoded_label = decoded_label[1:].view(label_number-1, output_dim)
@@ -239,7 +223,7 @@ def evaluate(image, text, model, criterion, data_loader, max_eval_iter=100):
 
             texts = cpu_texts[0]
             print(decoded_label.shape)
-            decoded_words = [converter.decode(item) for item in decoded_label[1]]
+            decoded_words = [converter.decode(item) for item in decoded_label[0]]
             print('pred {}: {}'.format(i, ''.join(decoded_words)))
             print('gt {}: {}'.format(i, texts))
 
