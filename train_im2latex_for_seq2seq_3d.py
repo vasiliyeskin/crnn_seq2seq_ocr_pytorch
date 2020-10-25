@@ -230,6 +230,7 @@ def evaluate(image, text, model, criterion, data_loader, max_eval_iter=100):
         #         decoded_words.append(converter.decode(ni))
         #         decoded_label.append(ni)
             decoded_label = model(image, target_variable, 0)
+            print(decoded_label.shape)
             output_dim = decoded_label.shape[-1]
             decoded_label = decoded_label[1:].view(-1, output_dim)
             target_variable = target_variable[1:].view(-1)
