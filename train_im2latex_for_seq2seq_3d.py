@@ -205,31 +205,42 @@ def evaluate(image, text, model, data_loader, max_eval_iter=100):
             target_variable = converter.encode(cpu_texts)
             n_total += len(cpu_texts[0]) + 1
 
-        decoded_words = []
-        decoded_label = []
-        # encoder_outputs = encoder(image)
-        if torch.cuda.is_available():
-            target_variable = target_variable.cuda()
-        #     decoder_input = target_variable[0].cuda()
-        #     decoder_hidden = decoder.initHidden(batch_size).cuda()
-        # else:
-        #     decoder_input = target_variable[0]
-        #     decoder_hidden = decoder.initHidden(batch_size)
-        #
-        # for di in range(1, target_variable.shape[0]):
-        #     decoder_output, decoder_hidden, decoder_attention = decoder(decoder_input, decoder_hidden, encoder_outputs)
-        #     topv, topi = decoder_output.data.topk(1)
-        #     ni = topi.squeeze(1)
-        #     decoder_input = ni
-        #     if ni == utils.EOS_TOKEN:
-        #         decoded_label.append(utils.EOS_TOKEN)
-        #         break
-        #     else:
-        #         decoded_words.append(converter.decode(ni))
-        #         decoded_label.append(ni)
-            decoded_label = model(image, target_variable, 0)
-            print(decoded_label)
-            decoded_words = [converter.decode(item) for item in decoded_label]
+            decoded_words = []
+            decoded_label = []
+            trg_len = target_variable.shape[0]
+            trg_vocab_size = model.decoder.output_dim
+
+            outputs = torch.zeros(trg_len, batch_size, trg_vocab_size).to(model.device)
+
+            # image to the convolution neural network
+            cnn_outputs = model.cnn(image)
+            b, c, h, w = cnn_outputs.size()
+            cnn_outputs = cnn_outputs.view(b, c, h * w)  # [b, c, h, w] -> [b, c, h*w]
+            cnn_outputs = cnn_outputs.permute(2, 0, 1)  # [b, c, w] -> [w, b, c]
+
+            encoder_outputs, hidden = model.encoder(cnn_outputs)
+            # first input to the decoder is the <sos> tokens
+            input = target_variable[0, :]
+
+            if torch.cuda.is_available():
+                target_variable = target_variable.cuda()
+                decoder_input = target_variable[0].cuda()
+                decoder_hidden = model.decoder.initHidden(batch_size).cuda()
+            else:
+                decoder_input = target_variable[0]
+                decoder_hidden = model.decoder.initHidden(batch_size)
+
+            for di in range(1, target_variable.shape[0]):
+                decoder_output, decoder_hidden, decoder_attention = model.decoder(decoder_input, decoder_hidden, encoder_outputs)
+                topv, topi = decoder_output.data.topk(1)
+                ni = topi.squeeze(1)
+                decoder_input = ni
+                if ni == utils.EOS_TOKEN:
+                    decoded_label.append(utils.EOS_TOKEN)
+                    break
+                else:
+                    decoded_words.append(converter.decode(ni))
+                    decoded_label.append(ni)
 
             for pred, target in zip(decoded_label, target_variable[1:,:]):
                 if pred == target:
