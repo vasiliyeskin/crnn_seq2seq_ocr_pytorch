@@ -230,10 +230,12 @@ def evaluate(image, text, model, criterion, data_loader, max_eval_iter=100):
         #         decoded_words.append(converter.decode(ni))
         #         decoded_label.append(ni)
             decoded_label = model(image, target_variable, 0)
-            print(decoded_label.shape)
-            output_dim = decoded_label.shape[-1]
-            decoded_label = decoded_label[1:].view(-1, output_dim)
-            target_variable = target_variable[1:].view(-1)
+            print(target_variable)
+            images_number, batch, output_dim = decoded_label.size()
+            decoded_label = decoded_label.view(images_number, output_dim)
+            target_variable = target_variable.view(-1)
+            print(target_variable)
+            print(decoded_label)
 
             loss = criterion(decoded_label, target_variable)
             epoch_loss += loss.item()
