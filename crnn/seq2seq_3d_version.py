@@ -139,6 +139,8 @@ class Decoder(nn.Module):
     def __init__(self, output_dim, emb_dim, enc_hid_dim, dec_hid_dim, dropout, attention):
         super().__init__()
 
+        self.hidden_size = dec_hid_dim
+
         self.output_dim = output_dim
         self.attention = attention
 
@@ -208,6 +210,9 @@ class Decoder(nn.Module):
 
         return prediction, hidden.squeeze(0)
 
+    def initHidden(self, batch_size):
+        result = torch.autograd.Variable(torch.zeros(1, batch_size, self.hidden_size))
+        return result
 
 class Seq2Seq(nn.Module):
     def __init__(self, cnn, encoder, decoder, device):
