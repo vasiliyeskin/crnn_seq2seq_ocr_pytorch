@@ -232,7 +232,7 @@ def evaluate(image, text, model, criterion, data_loader, max_eval_iter=100):
             decoded_label = model(image, target_variable, 0)
             print(decoded_label.shape)
             images_number, batch, output_dim = decoded_label.size()
-            decoded_label = decoded_label[1:].view(images_number, output_dim)
+            decoded_label = decoded_label[1:].view(-1, output_dim)
             target_variable = target_variable[1:].view(-1)
             print(decoded_label)
             print(target_variable)
