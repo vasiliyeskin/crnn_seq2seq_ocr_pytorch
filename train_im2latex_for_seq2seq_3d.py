@@ -228,7 +228,8 @@ def evaluate(image, text, model, data_loader, max_eval_iter=100):
         #         decoded_words.append(converter.decode(ni))
         #         decoded_label.append(ni)
             decoded_label = model(image, target_variable, 0)
-            decoded_words = converter.decode(decoded_label)
+            print(decoded_label)
+            decoded_words = [converter.decode(item) for item in decoded_label]
 
             for pred, target in zip(decoded_label, target_variable[1:,:]):
                 if pred == target:
@@ -322,8 +323,8 @@ def main():
     print(f'The model has {S2S.count_parameters(model):,} trainable parameters')
 
 
-    criterion = torch.nn.NLLLoss()
-    # criterion = torch.nn.CrossEntropyLoss()
+    # criterion = torch.nn.NLLLoss()
+    criterion = torch.nn.CrossEntropyLoss()
 
     # assert torch.cuda.is_available(), "Please run \'train.py\' script on nvidia cuda devices."
     if torch.cuda.is_available():
