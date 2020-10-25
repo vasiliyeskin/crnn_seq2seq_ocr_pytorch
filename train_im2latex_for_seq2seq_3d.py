@@ -237,11 +237,10 @@ def evaluate(image, text, model, criterion, data_loader, max_eval_iter=100):
             loss = criterion(decoded_label, target_variable)
             epoch_loss += loss.item()
 
-            if i % 10 == 0:
-                texts = cpu_texts[0]
-                decoded_words = [converter.decode(item) for item in decoded_label[0]]
-                print('pred {}: {}'.format(i, ''.join(decoded_words)))
-                print('gt {}: {}'.format(i, texts))
+            texts = cpu_texts[0]
+            decoded_words = [converter.decode(item) for item in decoded_label[0]]
+            print('pred {}: {}'.format(i, ''.join(decoded_words)))
+            print('gt {}: {}'.format(i, texts))
 
     accuracy = epoch_loss / max_eval_iter
     print('Test epoch loss: {}, accuray: {}'.format(epoch_loss, accuracy))
