@@ -223,7 +223,7 @@ def evaluate(image, text, model, criterion, data_loader, max_eval_iter=100):
 
             texts = cpu_texts[0]
             print(decoded_label.shape)
-            decoded_words = [converter.decode(item) for item in decoded_label[0]]
+            decoded_words = [converter.decode(item) for item in decoded_label]
             print('pred {}: {}'.format(i, ''.join(decoded_words)))
             print('gt {}: {}'.format(i, texts))
 
