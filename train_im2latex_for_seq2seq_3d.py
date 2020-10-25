@@ -233,14 +233,13 @@ def evaluate(image, text, model, criterion, data_loader, max_eval_iter=100):
             output_dim = decoded_label.shape[-1]
             decoded_label = decoded_label[1:].view(-1, output_dim)
             target_variable = target_variable[1:].view(-1)
-            print(decoded_label)
-            decoded_words = [converter.decode(item) for item in decoded_label]
 
             loss = criterion(decoded_label, target_variable)
             epoch_loss += loss.item()
 
             if i % 10 == 0:
                 texts = cpu_texts[0]
+                decoded_words = [converter.decode(item) for item in decoded_label[0]]
                 print('pred {}: {}'.format(i, ''.join(decoded_words)))
                 print('gt {}: {}'.format(i, texts))
 
