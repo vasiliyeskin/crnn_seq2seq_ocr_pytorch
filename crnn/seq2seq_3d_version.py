@@ -268,6 +268,7 @@ class Seq2Seq(nn.Module):
             # if not, use predicted token
             input = trg[t] if teacher_force else top1
 
+        # print(top1)
         return outputs
 
 def init_weights(m):

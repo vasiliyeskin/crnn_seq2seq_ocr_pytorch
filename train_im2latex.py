@@ -34,8 +34,8 @@ parser.add_argument('--img_width', type=int, default=280, help='the width of the
 # parser.add_argument('--img_height', type=int, default=160, help='the height of the input image to network')
 # parser.add_argument('--img_width', type=int, default=500, help='the width of the input image to network')
 parser.add_argument('--hidden_size', type=int, default=256, help='size of the lstm hidden state')
-parser.add_argument('--num_epochs', type=int, default=10, help='number of epochs to train for')
-parser.add_argument('--learning_rate', type=float, default=0.0001, help='learning rate for Critic, default=0.00005')
+parser.add_argument('--num_epochs', type=int, default=1000, help='number of epochs to train for')
+parser.add_argument('--learning_rate', type=float, default=0.00001, help='learning rate for Critic, default=0.00005')
 parser.add_argument('--encoder', type=str, default='', help="path to encoder (to continue training)")
 parser.add_argument('--decoder', type=str, default='', help='path to decoder (to continue training)')
 parser.add_argument('--model', default='./model/im2latex/', help='Where to store samples and models')
@@ -55,8 +55,8 @@ with open('./data/sample/latex_vocab.txt') as f:
 # define convert bwteen string and label index
 converter = utils.ConvertBetweenStringAndLabel(alphabet)
 
-# len(alphabet) + SOS_TOKEN + EOS_TOKEN
-num_classes = len(alphabet) + 2
+# len(alphabet) + SOS_TOKEN + EOS_TOKEN + PAD_TOKEN
+num_classes = len(alphabet) + 3
 
 # load list of formulas
 with open('data/sample/formulas.norm.lst') as file:
@@ -137,6 +137,8 @@ def train(image, text, encoder, decoder, criterion, train_loader, teach_forcing_
                     topv, topi = decoder_output.data.topk(1)
                     ni = topi.squeeze()
                     decoder_input = ni
+                    # print(ni)
+                    # print('target: {}'.format(target_variable[di]))
             encoder.zero_grad()
             decoder.zero_grad()
             loss.backward()
@@ -266,7 +268,7 @@ def main():
         decoder.load_state_dict(torch.load(cfg.decoder))
 
 
-    criterion = torch.nn.NLLLoss()
+    criterion = torch.nn.NLLLoss(ignore_index=utils.PAD_TOKEN)
 
     # assert torch.cuda.is_available(), "Please run \'train.py\' script on nvidia cuda devices."
     if torch.cuda.is_available():

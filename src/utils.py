@@ -10,6 +10,7 @@ import cv2
 
 SOS_TOKEN = 0  # special token for start of sentence
 EOS_TOKEN = 1  # special token for end of sentence
+PAD_TOKEN = 2  # special token for the unknown value
 
 class ConvertBetweenStringAndLabel(object):
     """Convert between str and label.
@@ -28,8 +29,9 @@ class ConvertBetweenStringAndLabel(object):
         self.dict = {}
         self.dict['SOS_TOKEN'] = SOS_TOKEN
         self.dict['EOS_TOKEN'] = EOS_TOKEN
+        self.dict['PAD_TOKEN'] = PAD_TOKEN
         for i, item in enumerate(self.alphabet):
-            self.dict[item] = i + 2
+            self.dict[item] = i + 3
 
     def encode(self, text):
         """
@@ -40,12 +42,12 @@ class ConvertBetweenStringAndLabel(object):
             torch.IntTensor targets:max_length × batch_size
         """
         if isinstance(text, str):
-            text = [self.dict[item] if item in self.dict else 2 for item in text.split(' ')]
+            text = [self.dict[item] if item in self.dict else PAD_TOKEN for item in text.split(' ')]
         elif isinstance(text, collections.Iterable):
             text = [self.encode(s) for s in text]
             max_length = max([len(x) for x in text])
             nb = len(text)
-            targets = torch.ones(nb, max_length + 2) * 2
+            targets = torch.ones(nb, max_length + 3) * 2
             for i in range(nb):
                 targets[i][0] = 0
                 targets[i][1:len(text[i]) + 1] = text[i]
