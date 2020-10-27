@@ -74,11 +74,11 @@ def tensor2image(x):
     plt.show()
 
 
-def train(image, text, model, criterion, train_loader, teach_forcing_prob=1):
+def train(image, text, model, criterion, train_loader, teach_forcing_prob=0.5):
     # optimizer
     # encoder_optimizer = torch.optim.Adam(encoder.parameters(), lr=cfg.learning_rate, betas=(0.5, 0.999))
     # decoder_optimizer = torch.optim.Adam(decoder.parameters(), lr=cfg.learning_rate, betas=(0.5, 0.999))
-    optimizer = torch.optim.Adam(model.parameters())
+    optimizer = torch.optim.Adam(model.parameters(), lr=cfg.learning_rate, betas=(0.5, 0.999))
 
     # loss averager
     loss_avg = utils.Averager()
@@ -130,6 +130,8 @@ def train(image, text, model, criterion, train_loader, teach_forcing_prob=1):
             # tensor2image(cpu_images[0])
             # print(cpu_texts[0])
             # print(target_variable[0])
+            # print(cpu_texts)
+            # print(target_variable)
 
             loss = 0.0
             p = True if random.random() > teach_forcing_prob else False
@@ -162,6 +164,9 @@ def train(image, text, model, criterion, train_loader, teach_forcing_prob=1):
 
             output = output[1:].view(-1, output_dim)
             target_variable = target_variable[1:].view(-1)
+
+            # trg = [(trg len - 1) * batch size]
+            # output = [(trg len - 1) * batch size, output dim]
 
             loss = criterion(output, target_variable)
             loss.backward()
@@ -200,46 +205,37 @@ def evaluate(image, text, model, criterion, data_loader, max_eval_iter=100):
 
     epoch_loss = 0
 
-    # with torch.no_grad():
-    for i in range(min(len(data_loader), max_eval_iter)):
-        cpu_images, cpu_texts = val_iter.next()
-        batch_size = cpu_images.size(0)
-        utils.load_data(image, cpu_images)
+    with torch.no_grad():
+        for i in range(min(len(data_loader), max_eval_iter)):
+            cpu_images, cpu_texts = val_iter.next()
+            batch_size = cpu_images.size(0)
+            utils.load_data(image, cpu_images)
 
-        target_variable = converter.encode(cpu_texts)
-        n_total += len(cpu_texts[0]) + 1
+            target_variable = converter.encode(cpu_texts)
+            n_total += len(cpu_texts[0]) + 1
 
-        decoded_words = []
-        decoded_label = []
-        # encoder_outputs = encoder(image)
-        if torch.cuda.is_available():
-            target_variable = target_variable.cuda()
+            decoded_words = []
+            # encoder_outputs = encoder(image)
+            if torch.cuda.is_available():
+                target_variable = target_variable.cuda()
 
-        decoded_label = model(image, target_variable, 0)
-        label_number, batch, output_dim = decoded_label.size()
-        decoded_label = decoded_label.view(-1, output_dim)
-        target_variable = target_variable.view(-1)
+            decoded_label = model(image, target_variable, 0)
+            label_number, batch, output_dim = decoded_label.size()
+            decoded_label = decoded_label.view(-1, output_dim)
+            target_variable = target_variable.view(-1)
 
-        loss = criterion(decoded_label, target_variable)
-        epoch_loss += loss.item()
+            loss = criterion(decoded_label, target_variable)
+            epoch_loss += loss.item()
 
-        if i % 10 == 0:
-            texts = cpu_texts[0]
-            print(decoded_label.shape)
-            # decoded_words = [converter.decode(item) for item in decoded_label[0]]
-            decoded_words = [converter.decode(item) for item in decoded_label[0]]
-            print('pred {}: {}'.format(i, ''.join(decoded_words)))
-            print('gt {}: {}'.format(i, texts))
-
-            for di in range(1, decoded_label.shape[0]):
-                topv, topi = decoded_label.data.topk(1)
-                ni = topi.squeeze(1)
-                decoder_input = ni
-                if ni == utils.EOS_TOKEN:
-                    break
-                else:
+            if i % 10 == 0:
+                texts = cpu_texts[0]
+                for idl in range(decoded_label.shape[0]):
+                    topv, topi = decoded_label[idl].data.topk(1)
+                    ni = topi.squeeze()
                     decoded_words.append(converter.decode(ni))
 
+                print('pred {}: {}'.format(i, ' '.join(decoded_words)))
+                print('gt {}: {}'.format(i, texts))
 
 
     accuracy = epoch_loss / max_eval_iter
@@ -321,12 +317,13 @@ def main():
 
     model = S2S.Seq2Seq(cnn, enc, dec, device).to(device)
 
-    model.apply(S2S.init_weights)
+    # model.apply(S2S.init_weights)
+    # model.apply(utils.weights_init)
     print(model)
 
-    print(f'The model has {S2S.count_parameters(model):,} trainable parameters')
+    print(f'The model has {S2S.count_parameters(model):,} trainable parameters\n')
 
-    # criterion = torch.nn.NLLLoss()
+    # criterion = torch.nn.NLLLoss(ignore_index=utils.PAD_TOKEN)
     criterion = torch.nn.CrossEntropyLoss(ignore_index=utils.PAD_TOKEN)
 
     # assert torch.cuda.is_available(), "Please run \'train.py\' script on nvidia cuda devices."
@@ -336,6 +333,10 @@ def main():
         image = image.cuda()
         text = text.cuda()
         criterion = criterion.cuda()
+
+
+    # #     test
+    # evaluate(image, text, model, criterion, test_loader, max_eval_iter=100)
 
     # train crnn
     train(image, text, model, criterion, train_loader, teach_forcing_prob=cfg.teaching_forcing_prob)

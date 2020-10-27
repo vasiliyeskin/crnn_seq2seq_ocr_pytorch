@@ -22,6 +22,8 @@ import src.dataset as dataset
 
 import crnn.seq2seq as crnn
 
+clip = 1
+
 cudnn.benchmark = True
 
 parser = argparse.ArgumentParser()
@@ -34,8 +36,8 @@ parser.add_argument('--img_width', type=int, default=280, help='the width of the
 # parser.add_argument('--img_height', type=int, default=160, help='the height of the input image to network')
 # parser.add_argument('--img_width', type=int, default=500, help='the width of the input image to network')
 parser.add_argument('--hidden_size', type=int, default=256, help='size of the lstm hidden state')
-parser.add_argument('--num_epochs', type=int, default=1000, help='number of epochs to train for')
-parser.add_argument('--learning_rate', type=float, default=0.00001, help='learning rate for Critic, default=0.00005')
+parser.add_argument('--num_epochs', type=int, default=2, help='number of epochs to train for')
+parser.add_argument('--learning_rate', type=float, default=0.005, help='learning rate for Critic, default=0.00005')
 parser.add_argument('--encoder', type=str, default='', help="path to encoder (to continue training)")
 parser.add_argument('--decoder', type=str, default='', help='path to decoder (to continue training)')
 parser.add_argument('--model', default='./model/im2latex/', help='Where to store samples and models')
@@ -68,7 +70,7 @@ def tensor2image(x):
     plt.imshow(xtensors)
     plt.show()
 
-def train(image, text, encoder, decoder, criterion, train_loader, teach_forcing_prob=1):
+def train(image, text, encoder, decoder, criterion, train_loader, teach_forcing_prob=0.5):
     # optimizer
     encoder_optimizer = torch.optim.Adam(encoder.parameters(), lr=cfg.learning_rate, betas=(0.5, 0.999))
     decoder_optimizer = torch.optim.Adam(decoder.parameters(), lr=cfg.learning_rate, betas=(0.5, 0.999))
@@ -80,6 +82,8 @@ def train(image, text, encoder, decoder, criterion, train_loader, teach_forcing_
         train_iter = iter(train_loader)
 
         for i in range(len(train_loader)):
+            encoder_optimizer.zero_grad()
+            decoder_optimizer.zero_grad()
 
             cpu_images, cpu_texts = train_iter.next()
             batch_size = cpu_images.size(0)
@@ -137,11 +141,15 @@ def train(image, text, encoder, decoder, criterion, train_loader, teach_forcing_
                     topv, topi = decoder_output.data.topk(1)
                     ni = topi.squeeze()
                     decoder_input = ni
-                    # print(ni)
-                    # print('target: {}'.format(target_variable[di]))
+
+                    # print('predict: {}'.format(converter.decode(ni[0])))
+                    # print('target: {}'.format(converter.decode(target_variable[di][0])))
             encoder.zero_grad()
             decoder.zero_grad()
             loss.backward()
+
+            # torch.nn.utils.clip_grad_norm_(encoder.parameters(), clip)
+            # torch.nn.utils.clip_grad_norm_(decoder.parameters(), clip)
             encoder_optimizer.step()
             decoder_optimizer.step()
 
@@ -217,6 +225,8 @@ def get_formula(label):
     # function returnes the formula
     return formulas[int(label)]
 
+def count_parameters(model):
+    return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
 def main():
     if not os.path.exists(cfg.model):
@@ -258,6 +268,8 @@ def main():
     decoder = crnn.Decoder(hidden_size=cfg.hidden_size, output_size=num_classes, dropout_p=0.1, max_length=max_width)
     print(encoder)
     print(decoder)
+    # print(f'The encode has {count_parameters(encoder):,} trainable parameters')
+    # print(f'The decode has {count_parameters(decoder):,} trainable parameters')
     encoder.apply(utils.weights_init)
     decoder.apply(utils.weights_init)
     if cfg.encoder:
