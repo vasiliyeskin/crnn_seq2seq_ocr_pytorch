@@ -58,6 +58,8 @@ class CNN(nn.Module):
                       nn.Conv2d(512, 512, 2, 1, 0), nn.BatchNorm2d(512), nn.ReLU(True))
 
     def forward(self, input):
+        # input = input + (-128.0)  ##??
+        # input = input / 128.0  ##??
         # [n, channel_size, 32, 280] -> [n, 512, 1, 71]
         conv = self.cnn(input)
         return conv

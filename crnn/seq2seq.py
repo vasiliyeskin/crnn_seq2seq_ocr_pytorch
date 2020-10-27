@@ -93,6 +93,8 @@ class Encoder(nn.Module):
             BidirectionalLSTM(hidden_size, hidden_size, hidden_size))
 
     def forward(self, input):
+        # input = input + (-128.0)  ##??
+        # input = input / 128.0  ##??
         # conv features
         conv = self.cnn(input)
         b, c, h, w = conv.size()

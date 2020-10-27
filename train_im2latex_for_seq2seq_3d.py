@@ -235,7 +235,7 @@ def evaluate(image, text, model, criterion, data_loader, max_eval_iter=100):
                     decoded_words.append(converter.decode(ni))
 
                 print('pred {}: {}'.format(i, ' '.join(decoded_words)))
-                print('gt {}: {}'.format(i, texts))
+                print('gt {}: {}\n'.format(i, texts))
 
 
     accuracy = epoch_loss / max_eval_iter

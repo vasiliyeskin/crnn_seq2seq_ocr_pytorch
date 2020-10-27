@@ -37,7 +37,7 @@ parser.add_argument('--img_width', type=int, default=280, help='the width of the
 # parser.add_argument('--img_width', type=int, default=500, help='the width of the input image to network')
 parser.add_argument('--hidden_size', type=int, default=256, help='size of the lstm hidden state')
 parser.add_argument('--num_epochs', type=int, default=2, help='number of epochs to train for')
-parser.add_argument('--learning_rate', type=float, default=0.005, help='learning rate for Critic, default=0.00005')
+parser.add_argument('--learning_rate', type=float, default=0.00005, help='learning rate for Critic, default=0.00005')
 parser.add_argument('--encoder', type=str, default='', help="path to encoder (to continue training)")
 parser.add_argument('--decoder', type=str, default='', help='path to decoder (to continue training)')
 parser.add_argument('--model', default='./model/im2latex/', help='Where to store samples and models')
@@ -266,10 +266,12 @@ def main():
 
     # for prediction of an indefinite long sequence
     decoder = crnn.Decoder(hidden_size=cfg.hidden_size, output_size=num_classes, dropout_p=0.1, max_length=max_width)
+
     print(encoder)
     print(decoder)
-    # print(f'The encode has {count_parameters(encoder):,} trainable parameters')
-    # print(f'The decode has {count_parameters(decoder):,} trainable parameters')
+    print(f'The encode has {count_parameters(encoder):,} trainable parameters')
+    print(f'The decode has {count_parameters(decoder):,} trainable parameters')
+
     encoder.apply(utils.weights_init)
     decoder.apply(utils.weights_init)
     if cfg.encoder:
