@@ -35,7 +35,7 @@ parser.add_argument('--img_width', type=int, default=280, help='the width of the
 # parser.add_argument('--img_height', type=int, default=160, help='the height of the input image to network')
 # parser.add_argument('--img_width', type=int, default=500, help='the width of the input image to network')
 parser.add_argument('--hidden_size', type=int, default=256, help='size of the lstm hidden state')
-parser.add_argument('--num_epochs', type=int, default=2, help='number of epochs to train for')
+parser.add_argument('--num_epochs', type=int, default=1000, help='number of epochs to train for')
 parser.add_argument('--learning_rate', type=float, default=0.0001, help='learning rate for Critic, default=0.00005')
 parser.add_argument('--encoder', type=str, default='', help="path to encoder (to continue training)")
 parser.add_argument('--decoder', type=str, default='', help='path to decoder (to continue training)')

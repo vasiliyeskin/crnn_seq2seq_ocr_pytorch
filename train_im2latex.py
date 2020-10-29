@@ -43,7 +43,7 @@ parser.add_argument('--decoder', type=str, default='', help='path to decoder (to
 parser.add_argument('--model', default='./model/im2latex/', help='Where to store samples and models')
 parser.add_argument('--random_sample', default=True, action='store_true', help='whether to sample the dataset with random sampler')
 parser.add_argument('--teaching_forcing_prob', type=float, default=0.5, help='where to use teach forcing')
-parser.add_argument('--max_width', type=int, default=71, help='the width of the feature map out from cnn')
+parser.add_argument('--max_width', type=int, default=200, help='the width of the feature map out from cnn')
 cfg = parser.parse_args()
 print(cfg)
 
